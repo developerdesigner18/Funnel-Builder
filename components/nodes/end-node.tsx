@@ -10,7 +10,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
-export function EndNode({ data, selected, id }: NodeProps) {
+export const EndNode = React.memo(({ data, selected, id }: NodeProps) => {
   const handleClick = () => {
     window.dispatchEvent(
       new CustomEvent('nodeSelected', {
@@ -59,4 +59,6 @@ export function EndNode({ data, selected, id }: NodeProps) {
       </div>
     </div>
   );
-}
+});
+
+EndNode.displayName = 'EndNode';

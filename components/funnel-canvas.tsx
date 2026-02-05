@@ -41,6 +41,7 @@ interface FunnelCanvasProps {
   initialEdges: Edge[];
   onNodesChange: (nodes: Node[]) => void;
   onEdgesChange: (edges: Edge[]) => void;
+  onInteractionEnd: () => void;
   onDrop?: (node: Node) => void;
 }
 
@@ -56,6 +57,7 @@ function FunnelCanvasContent({
   initialEdges,
   onNodesChange,
   onEdgesChange,
+  onInteractionEnd,
   onDrop,
 }: FunnelCanvasProps) {
   const reactFlowInstance = useReactFlow();
@@ -125,8 +127,9 @@ function FunnelCanvasContent({
 
       const nextEdges = addEdge(edge, initialEdges);
       onEdgesChange(nextEdges);
+      onInteractionEnd();
     },
-    [initialEdges, onEdgesChange]
+    [initialEdges, onEdgesChange, onInteractionEnd]
   );
 
   const onDragOver = useCallback((event: React.DragEvent) => {
@@ -162,8 +165,9 @@ function FunnelCanvasContent({
       };
 
       onDrop(newNode);
+      onInteractionEnd();
     },
-    [reactFlowInstance, onDrop]
+    [reactFlowInstance, onDrop, onInteractionEnd]
   );
 
   return (
@@ -174,6 +178,10 @@ function FunnelCanvasContent({
         onNodesChange={handleNodesChange}
         onEdgesChange={handleEdgesChange}
         onConnect={onConnect}
+        onNodeDragStop={onInteractionEnd}
+        onSelectionDragStop={onInteractionEnd}
+        onNodesDelete={onInteractionEnd}
+        onEdgesDelete={onInteractionEnd}
         isValidConnection={isValidConnection}
         onDragOver={onDragOver}
         onDrop={handleDrop}

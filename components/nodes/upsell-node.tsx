@@ -10,7 +10,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
-export function UpsellNode({ data, selected, id }: NodeProps) {
+export const UpsellNode = React.memo(({ data, selected, id }: NodeProps) => {
   const handleClick = () => {
     window.dispatchEvent(
       new CustomEvent('nodeSelected', {
@@ -63,4 +63,6 @@ export function UpsellNode({ data, selected, id }: NodeProps) {
       <Handle type="source" position={Position.Bottom} />
     </div>
   );
-}
+});
+
+UpsellNode.displayName = 'UpsellNode';

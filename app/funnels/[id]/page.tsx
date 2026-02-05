@@ -60,6 +60,7 @@ export default function FunnelEditorPage() {
   const [selectedNodeType, setSelectedNodeType] = useState<string | null>(null);
   const [selectedNodeData, setSelectedNodeData] = useState({});
   const [zoom, setZoom] = useState(1);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     if (funnel) {
@@ -119,18 +120,22 @@ export default function FunnelEditorPage() {
   const handleNodesChange = useCallback(
     (updatedNodes: Node[]) => {
       setNodes(updatedNodes);
-      pushHistory(updatedNodes, edges);
+      // No automatic history push here to prevent lag during drag
     },
-    [edges, pushHistory]
+    []
   );
 
   const handleEdgesChange = useCallback(
     (updatedEdges: Edge[]) => {
       setEdges(updatedEdges);
-      pushHistory(nodes, updatedEdges);
+      // No automatic history push here
     },
-    [nodes, pushHistory]
+    []
   );
+
+  const onInteractionEnd = useCallback(() => {
+    pushHistory(nodes, edges);
+  }, [nodes, edges, pushHistory]);
 
   const handleDragStart = (
     event: React.DragEvent,
@@ -339,28 +344,28 @@ export default function FunnelEditorPage() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 flex-col">
+    <div className="flex h-screen bg-gray-50 flex-col overflow-hidden">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between z-30 shadow-sm shrink-0">
+        <div className="flex items-center gap-2 md:gap-4 overflow-hidden">
           <Link href="/funnels">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Back to funnels">
               <ChevronLeft className="w-4 h-4" />
             </Button>
           </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{funnel?.name}</h1>
+          <div className="overflow-hidden">
+            <h1 className="text-lg md:text-xl font-bold text-gray-900 truncate">{funnel?.name}</h1>
             {funnel?.description && (
-              <p className="text-sm text-gray-500">{funnel.description}</p>
+              <p className="text-xs text-gray-500 truncate hidden sm:block">{funnel.description}</p>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 md:gap-2">
           <KeyboardHelp />
-          <div className="w-px h-6 bg-gray-200 mx-1" />
+          <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block" />
 
-          <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-md mr-2">
+          <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-md">
             <Button
               variant="ghost"
               size="sm"
@@ -385,16 +390,16 @@ export default function FunnelEditorPage() {
             </Button>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={handleExport}
-              className="text-gray-600 border-gray-300 focus-visible:ring-2 focus-visible:ring-blue-500"
+              className="text-gray-600 border-gray-300 focus-visible:ring-2 focus-visible:ring-blue-500 h-9"
               aria-label="Export funnel as JSON"
             >
-              <Download className="w-4 h-4 mr-2" />
-              Export
+              <Download className="w-4 h-4 sm:mr-2" />
+              <span className="hidden lg:inline">Export</span>
             </Button>
 
             <label className="cursor-pointer group">
@@ -406,47 +411,62 @@ export default function FunnelEditorPage() {
                 aria-label="Import funnel from JSON"
               />
               <div className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-gray-300 bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-3 group-focus-within:ring-2 group-focus-within:ring-blue-500 outline-none">
-                <Upload className="w-4 h-4 mr-2" />
-                Import
+                <Upload className="w-4 h-4 sm:mr-2" />
+                <span className="hidden lg:inline">Import</span>
               </div>
             </label>
 
             <Button
               size="sm"
               onClick={handleSave}
-              className="bg-blue-600 hover:bg-blue-700 shadow-sm focus-visible:ring-2 focus-visible:ring-blue-400"
+              className="bg-blue-600 hover:bg-blue-700 shadow-sm focus-visible:ring-2 focus-visible:ring-blue-400 h-9"
               aria-label="Save all changes"
             >
-              <Save className="w-4 h-4 mr-2" />
-              Save
+              <Save className="w-4 h-4 sm:mr-2" />
+              <span className="hidden lg:inline">Save</span>
             </Button>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
-        <TemplatesSidebar onDragStart={handleDragStart} />
-
-        <div className="flex-1 relative bg-gray-100">
-          <FunnelCanvas
-            funnelId={funnelId}
-            initialNodes={validatedNodes}
-            initialEdges={edges}
-            onNodesChange={handleNodesChange}
-            onEdgesChange={handleEdgesChange}
-            onDrop={onDrop}
-          />
+      <div className="flex flex-1 overflow-hidden relative">
+        <div className={`transition-all duration-300 ease-in-out ${sidebarOpen ? 'w-64' : 'w-0'} overflow-hidden border-r border-gray-200 bg-white z-20`}>
+          <TemplatesSidebar onDragStart={handleDragStart} />
         </div>
 
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className={`absolute left-0 top-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-r-md p-1 shadow-md z-30 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 ${sidebarOpen ? 'ml-64' : 'ml-0'}`}
+          aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+        >
+          {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4 rotate-180" />}
+        </button>
+
+        <main className="flex-1 relative bg-gray-100 flex flex-col">
+          <div className="flex-1 relative">
+            <FunnelCanvas
+              funnelId={funnelId}
+              initialNodes={validatedNodes}
+              initialEdges={edges}
+              onNodesChange={handleNodesChange}
+              onEdgesChange={handleEdgesChange}
+              onInteractionEnd={onInteractionEnd}
+              onDrop={onDrop}
+            />
+          </div>
+        </main>
+
         {selectedNodeId && (
-          <PropertiesEditor
-            nodeId={selectedNodeId}
-            nodeType={selectedNodeType}
-            nodeData={selectedNodeData}
-            onUpdate={handlePropertyUpdate}
-            onClose={() => setSelectedNodeId(null)}
-          />
+          <div className="fixed inset-y-0 right-0 z-40 lg:relative lg:inset-auto">
+            <PropertiesEditor
+              nodeId={selectedNodeId}
+              nodeType={selectedNodeType}
+              nodeData={selectedNodeData}
+              onUpdate={handlePropertyUpdate}
+              onClose={() => setSelectedNodeId(null)}
+            />
+          </div>
         )}
       </div>
     </div>
