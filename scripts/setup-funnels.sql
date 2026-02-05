@@ -32,6 +32,22 @@ CREATE TABLE IF NOT EXISTS funnel_edges (
 );
 
 -- Create indices for performance
-CREATE INDEX idx_funnel_nodes_funnel_id ON funnel_nodes(funnel_id);
-CREATE INDEX idx_funnel_edges_funnel_id ON funnel_edges(funnel_id);
-CREATE INDEX idx_funnel_edges_nodes ON funnel_edges(source_node_id, target_node_id);
+CREATE INDEX IF NOT EXISTS idx_funnel_nodes_funnel_id ON funnel_nodes(funnel_id);
+CREATE INDEX IF NOT EXISTS idx_funnel_edges_funnel_id ON funnel_edges(funnel_id);
+CREATE INDEX IF NOT EXISTS idx_funnel_edges_nodes ON funnel_edges(source_node_id, target_node_id);
+
+-- Add unique constraint for upsert support
+ALTER TABLE funnel_nodes ADD CONSTRAINT IF NOT EXISTS funnel_nodes_funnel_id_node_id_key UNIQUE (funnel_id, node_id);
+
+-- Enable RLS
+ALTER TABLE funnels ENABLE ROW LEVEL SECURITY;
+ALTER TABLE funnel_nodes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE funnel_edges ENABLE ROW LEVEL SECURITY;
+
+-- Create Policies (Public Access for now, swap with auth logic later)
+-- Funnels
+CREATE POLICY "Enable all for everyone" ON funnels FOR ALL USING (true) WITH CHECK (true);
+-- Nodes
+CREATE POLICY "Enable all for everyone" ON funnel_nodes FOR ALL USING (true) WITH CHECK (true);
+-- Edges
+CREATE POLICY "Enable all for everyone" ON funnel_edges FOR ALL USING (true) WITH CHECK (true);

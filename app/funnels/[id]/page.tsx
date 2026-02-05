@@ -18,7 +18,7 @@ export default function FunnelEditorPage() {
   const params = useParams();
   const funnelId = params.id as string;
 
-  const { funnel, loading, saveNodes, saveEdges, addNode, deleteNode, addEdge, deleteEdge } =
+  const { funnel, loading, error, saveNodes, saveEdges, addNode, deleteNode, addEdge, deleteEdge } =
     useFunnelStorage(funnelId);
   const { pushHistory, undo, redo, canUndo, canRedo } = useUndoRedo();
 
@@ -338,6 +338,23 @@ export default function FunnelEditorPage() {
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
           <p className="text-gray-600">Loading funnel...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="text-center p-8 bg-white rounded-lg shadow-md border border-red-100 max-w-md">
+          <div className="text-red-500 text-5xl mb-4 text-center">⚠️</div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Editor Error</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <Link href="/funnels">
+            <Button className="bg-blue-600 hover:bg-blue-700 w-full">
+              Back to Funnels
+            </Button>
+          </Link>
         </div>
       </div>
     );
