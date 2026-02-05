@@ -9,16 +9,34 @@ A powerful, drag-and-drop visual editor for designing and optimizing sales funne
 
 ## 🚀 Features
 
-- **Visual Drag & Drop Canvas**: Intuitive interface powered by React Flow for arranging funnel steps.
-- **Multiple Node Types**:
-  - **Product Node**: Define main products with pricing and descriptions.
-  - **Upsell Node**: Configure upsell offers with acceptance/rejection paths.
-  - **Conditional Node**: Add logic branches based on customer behavior or data.
-  - **End Node**: Mark successful completion or exit points of the funnel.
-- **Real-time Properties Editor**: specific configuration panel for each node type to adjust settings instantly.
-- **Persistent Storage**: auto-saving of funnel structure and node data to a Supabase PostgreSQL database.
-- **Responsive Design**: precise control over layout and connections on any screen size.
-- **Undo/Redo History**: (Planned) Navigate through your editing history with ease.
+- **Visual Drag & Drop Canvas**: Intuitive interface powered by React Flow for arranging funnel steps with smooth drag feedback and precise placement.
+- **Smart Validation System**: Real-time "soft" validation that guides you toward building logical funnel paths:
+  - **Sales Page Logic**: Enforces exactly one primary outgoing path to ensure a clear starting journey.
+  - **Thank You Protection**: Prevents invalid outgoing connections from the final funnel step.
+  - **Orphan Detection**: Automatically identifies disconnected nodes with visual warnings and tooltips.
+- **Intelligent Persistence**:
+  - **Auto-Save**: Debounced background syncing (3s) ensures your work is always safe in Supabase.
+  - **Undo/Redo**: Full history stack to experiment freely with layout and properties.
+  - **Manual Commit**: One-click save for immediate synchronization.
+- **Data Portability**:
+  - **JSON Export**: Download your entire funnel architecture as a portable JSON file.
+  - **JSON Import**: Restore exact funnel states from file with automatic validation and sync.
+- **Sequential Auto-Naming**: Smart labeling for "Upsell" and "Downsell" nodes that increments automatically (e.g., Upsell 1, Upsell 2).
+- **Refined UI/UX**: Premium styling with Tailwind CSS, animated connections, and a responsive properties editor.
+
+## ⌨️ Accessibility & Shortcuts
+
+The editor is built with a focus on inclusion and speed:
+- **Keyboard Navigation**: Full `Tab` order support for all header controls, sidebar templates, and canvas nodes.
+- **Visual Focus**: High-contrast, theme-aware focus rings for all interactive elements.
+- **Keyboard Shortcuts**:
+  - `Ctrl + S`: Save funnel instantly.
+  - `Ctrl + Z` / `Ctrl + Y`: Undo and Redo changes.
+  - `Ctrl + D`: Duplicate the currently selected node.
+  - `Delete` / `Backspace`: Remove the focused node or edge.
+  - `?`: Open the interactive keyboard shortcuts help dialog.
+  - `Esc`: Close the properties sidebar or help modal.
+- **Screen Reader Support**: Semantic HTML, ARIA labels, and descriptive roles for all non-textual elements.
 
 ## 🛠️ Tech Stack
 

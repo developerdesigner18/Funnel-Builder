@@ -366,8 +366,9 @@ export default function FunnelEditorPage() {
               size="sm"
               onClick={handleUndo}
               disabled={!canUndo}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 focus-visible:ring-2 focus-visible:ring-blue-500"
               title="Undo (Ctrl+Z)"
+              aria-label="Undo"
             >
               <Undo2 className="w-4 h-4" />
             </Button>
@@ -376,8 +377,9 @@ export default function FunnelEditorPage() {
               size="sm"
               onClick={handleRedo}
               disabled={!canRedo}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 focus-visible:ring-2 focus-visible:ring-blue-500"
               title="Redo (Ctrl+Y)"
+              aria-label="Redo"
             >
               <Redo2 className="w-4 h-4" />
             </Button>
@@ -388,20 +390,22 @@ export default function FunnelEditorPage() {
               variant="outline"
               size="sm"
               onClick={handleExport}
-              className="text-gray-600 border-gray-300"
+              className="text-gray-600 border-gray-300 focus-visible:ring-2 focus-visible:ring-blue-500"
+              aria-label="Export funnel as JSON"
             >
               <Download className="w-4 h-4 mr-2" />
               Export
             </Button>
 
-            <label className="cursor-pointer">
+            <label className="cursor-pointer group">
               <input
                 type="file"
                 accept=".json"
-                className="hidden"
+                className="sr-only"
                 onChange={handleImport}
+                aria-label="Import funnel from JSON"
               />
-              <div className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-3">
+              <div className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-gray-300 bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-3 group-focus-within:ring-2 group-focus-within:ring-blue-500 outline-none">
                 <Upload className="w-4 h-4 mr-2" />
                 Import
               </div>
@@ -410,7 +414,8 @@ export default function FunnelEditorPage() {
             <Button
               size="sm"
               onClick={handleSave}
-              className="bg-blue-600 hover:bg-blue-700 shadow-sm"
+              className="bg-blue-600 hover:bg-blue-700 shadow-sm focus-visible:ring-2 focus-visible:ring-blue-400"
+              aria-label="Save all changes"
             >
               <Save className="w-4 h-4 mr-2" />
               Save

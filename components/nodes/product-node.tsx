@@ -12,7 +12,6 @@ import {
 
 export function ProductNode({ data, selected, id }: NodeProps) {
   const handleClick = () => {
-    // Emit custom event for node selection
     window.dispatchEvent(
       new CustomEvent('nodeSelected', {
         detail: { nodeId: id, nodeType: 'product', nodeData: data },
@@ -20,10 +19,21 @@ export function ProductNode({ data, selected, id }: NodeProps) {
     );
   };
 
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick();
+    }
+  };
+
   return (
     <div
       onClick={handleClick}
-      className={`px-4 py-3 rounded-lg border-2 bg-white shadow-md min-w-[200px] cursor-pointer transition-all relative ${selected ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-300 hover:border-gray-400'
+      onKeyDown={onKeyDown}
+      tabIndex={0}
+      role="button"
+      aria-label={`${data.label} node, ${data.productName || 'Product'}, ${selected ? 'selected' : ''}`}
+      className={`px-4 py-3 rounded-lg border-2 bg-white shadow-md min-w-[200px] cursor-pointer transition-all relative outline-none focus-visible:ring-4 focus-visible:ring-blue-400 ${selected ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-300 hover:border-gray-400'
         } ${data.warning ? 'border-orange-400' : ''}`}
     >
       {data.warning && (

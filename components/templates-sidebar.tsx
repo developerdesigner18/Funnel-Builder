@@ -75,12 +75,15 @@ export function TemplatesSidebar({ onDragStart }: TemplatesSidebarProps) {
           <div
             key={template.id}
             draggable
+            tabIndex={0}
+            role="button"
+            aria-label={`Drag ${template.label} to canvas to add`}
             onDragStart={(e) => onDragStart(e, template.type, template.label, template.defaultData)}
-            className="p-3 border border-gray-200 rounded-lg cursor-move hover:bg-gray-50 transition-colors"
+            className="p-3 border border-gray-200 rounded-lg cursor-move hover:bg-gray-50 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 outline-none group"
           >
             <div className="flex items-center gap-3 mb-2">
-              <div className="text-gray-700">{template.icon}</div>
-              <h3 className="font-semibold text-sm text-gray-900">{template.label}</h3>
+              <div className="text-gray-700 group-hover:text-blue-600 transition-colors">{template.icon}</div>
+              <h3 className="font-semibold text-sm text-gray-900 group-hover:text-blue-700 transition-colors">{template.label}</h3>
             </div>
 
             <div className={`p-2 rounded mb-2 ${template.preview} text-xs font-medium text-center`}>

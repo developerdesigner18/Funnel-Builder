@@ -19,10 +19,21 @@ export function ConditionalNode({ data, selected, id }: NodeProps) {
     );
   };
 
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick();
+    }
+  };
+
   return (
     <div
       onClick={handleClick}
-      className={`px-4 py-3 rounded-lg border-2 bg-gradient-to-br from-purple-50 to-pink-50 shadow-md min-w-[200px] cursor-pointer transition-all relative ${selected ? 'border-purple-500 ring-2 ring-purple-300' : 'border-purple-300 hover:border-purple-400'
+      onKeyDown={onKeyDown}
+      tabIndex={0}
+      role="button"
+      aria-label={`${data.label} node, ${data.condition || 'Condition'}, ${selected ? 'selected' : ''}`}
+      className={`px-4 py-3 rounded-lg border-2 bg-gradient-to-br from-purple-50 to-pink-50 shadow-md min-w-[200px] cursor-pointer transition-all relative outline-none focus-visible:ring-4 focus-visible:ring-purple-400 ${selected ? 'border-purple-500 ring-2 ring-purple-300' : 'border-purple-300 hover:border-purple-400'
         } ${data.warning ? 'border-orange-400 shadow-orange-100' : ''}`}
     >
       {data.warning && (

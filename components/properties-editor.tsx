@@ -122,38 +122,47 @@ export function PropertiesEditor({
   };
 
   return (
-    <div className="w-80 bg-white border-l border-gray-200 p-4 flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-gray-900">Properties</h3>
+    <aside
+      className="w-80 bg-white border-l border-gray-200 p-4 flex flex-col h-full shadow-lg z-20"
+      role="complementary"
+      aria-labelledby="properties-editor-title"
+    >
+      <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-4">
+        <h3 id="properties-editor-title" className="font-bold text-gray-900">Properties</h3>
         <button
           onClick={onClose}
-          className="text-gray-400 hover:text-gray-600 transition-colors"
+          className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          aria-label="Close properties editor"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
 
-      <div className="space-y-4 flex-1 overflow-y-auto">
+      <div className="space-y-4 flex-1 overflow-y-auto pr-1">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-semibold text-gray-700 mb-1">
             Node Label
           </label>
           <Input
             value={formData.label as string}
             onChange={(e) => handleChange('label', e.target.value)}
             placeholder="Enter node label"
+            className="focus-visible:ring-2 focus-visible:ring-blue-500"
           />
         </div>
 
         {renderFields()}
       </div>
 
-      <button
-        onClick={handleSave}
-        className="w-full mt-4 px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
-      >
-        Save Changes
-      </button>
-    </div>
+      <div className="pt-4 border-t border-gray-100 mt-4">
+        <Button
+          onClick={handleSave}
+          className="w-full bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-sm font-semibold h-10 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          aria-label="Save changes to node"
+        >
+          Update Properties
+        </Button>
+      </div>
+    </aside>
   );
 }
