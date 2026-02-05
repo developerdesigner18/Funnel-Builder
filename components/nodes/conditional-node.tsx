@@ -2,6 +2,13 @@
 
 import React from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
+import { AlertCircle } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export function ConditionalNode({ data, selected, id }: NodeProps) {
   const handleClick = () => {
@@ -15,10 +22,25 @@ export function ConditionalNode({ data, selected, id }: NodeProps) {
   return (
     <div
       onClick={handleClick}
-      className={`px-4 py-3 rounded-lg border-2 bg-gradient-to-br from-purple-50 to-pink-50 shadow-md min-w-[200px] cursor-pointer transition-all ${
-        selected ? 'border-purple-500 ring-2 ring-purple-300' : 'border-purple-300 hover:border-purple-400'
-      }`}
+      className={`px-4 py-3 rounded-lg border-2 bg-gradient-to-br from-purple-50 to-pink-50 shadow-md min-w-[200px] cursor-pointer transition-all relative ${selected ? 'border-purple-500 ring-2 ring-purple-300' : 'border-purple-300 hover:border-purple-400'
+        } ${data.warning ? 'border-orange-400 shadow-orange-100' : ''}`}
     >
+      {data.warning && (
+        <div className="absolute -top-3 -right-3 z-10">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="bg-orange-100 text-orange-600 rounded-full p-1 shadow-sm border border-orange-200">
+                  <AlertCircle className="w-4 h-4" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">{data.warning}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      )}
       <Handle type="target" position={Position.Top} />
       <div className="space-y-1">
         <div className="text-sm font-bold text-gray-900">{data.label}</div>

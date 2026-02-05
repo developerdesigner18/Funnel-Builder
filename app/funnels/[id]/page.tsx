@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { Node, Edge } from 'reactflow';
@@ -10,7 +10,7 @@ import { PropertiesEditor } from '@/components/properties-editor';
 import { useFunnelStorage } from '@/hooks/use-funnel-storage';
 import { useUndoRedo } from '@/hooks/use-undo-redo';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Undo2, Redo2, Save } from 'lucide-react';
+import { ChevronLeft, Undo2, Redo2, Save, Download, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { KeyboardHelp } from '@/components/keyboard-help';
 
@@ -24,6 +24,38 @@ export default function FunnelEditorPage() {
 
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
+
+  const validatedNodes = useMemo(() => {
+    return nodes.map((node) => {
+      let warning = '';
+      const nodeType = node.data?.type;
+
+      const outgoingEdges = edges.filter((e) => e.source === node.id);
+      const incomingEdges = edges.filter((e) => e.target === node.id);
+
+      // Rule: Sales Page must have exactly one outgoing edge
+      if (nodeType === 'sales') {
+        if (outgoingEdges.length === 0) {
+          warning = 'Sales Page needs an outgoing connection.';
+        } else if (outgoingEdges.length > 1) {
+          warning = 'Sales Page should typically have only one path.';
+        }
+      }
+
+      // Rule: General Orphan Nodes (except Sales Page)
+      if (nodeType !== 'sales' && outgoingEdges.length === 0 && incomingEdges.length === 0) {
+        warning = 'This node is not connected to the funnel.';
+      }
+
+      return {
+        ...node,
+        data: {
+          ...node.data,
+          warning: warning || undefined,
+        },
+      };
+    });
+  }, [nodes, edges]);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedNodeType, setSelectedNodeType] = useState<string | null>(null);
   const [selectedNodeData, setSelectedNodeData] = useState({});
@@ -201,6 +233,75 @@ export default function FunnelEditorPage() {
     setSelectedNodeId(newNodeId);
   };
 
+  // Auto-save logic
+  useEffect(() => {
+    // Only auto-save if we have nodes (prevent saving empty states on initial load)
+    if (nodes.length === 0 && edges.length === 0) return;
+
+    const timer = setTimeout(() => {
+      saveNodes(nodes);
+      saveEdges(edges);
+    }, 3000); // 3-second debounce
+
+    return () => clearTimeout(timer);
+  }, [nodes, edges, saveNodes, saveEdges]);
+
+  // JSON Export/Import
+  const handleExport = () => {
+    const data = {
+      name: funnel?.name || 'funnel',
+      nodes,
+      edges,
+      exportedAt: new Date().toISOString(),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${funnel?.name || 'funnel'}-export.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success('Funnel exported successfully');
+  };
+
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const data = JSON.parse(content);
+
+        if (!data.nodes || !data.edges) {
+          throw new Error('Invalid funnel data format');
+        }
+
+        // Apply imported data
+        setNodes(data.nodes);
+        setEdges(data.edges);
+        pushHistory(data.nodes, data.edges);
+
+        // Immediate sync to database
+        saveNodes(data.nodes);
+        saveEdges(data.edges);
+
+        toast.success('Funnel imported successfully');
+      } catch (err) {
+        toast.error('Invalid JSON file. Please check the format.');
+        console.error('Import error:', err);
+      }
+    };
+    reader.readAsText(file);
+    // Reset file input
+    event.target.value = '';
+  };
+
   const handleUndo = () => {
     const previous = undo();
     if (previous) {
@@ -257,31 +358,64 @@ export default function FunnelEditorPage() {
 
         <div className="flex items-center gap-2">
           <KeyboardHelp />
-          <div className="w-px h-6 bg-gray-200" />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleUndo}
-            disabled={!canUndo}
-          >
-            <Undo2 className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRedo}
-            disabled={!canRedo}
-          >
-            <Redo2 className="w-4 h-4" />
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleSave}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Save className="w-4 h-4 mr-2" />
-            Save
-          </Button>
+          <div className="w-px h-6 bg-gray-200 mx-1" />
+
+          <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-md mr-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleUndo}
+              disabled={!canUndo}
+              className="h-8 w-8 p-0"
+              title="Undo (Ctrl+Z)"
+            >
+              <Undo2 className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRedo}
+              disabled={!canRedo}
+              className="h-8 w-8 p-0"
+              title="Redo (Ctrl+Y)"
+            >
+              <Redo2 className="w-4 h-4" />
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              className="text-gray-600 border-gray-300"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export
+            </Button>
+
+            <label className="cursor-pointer">
+              <input
+                type="file"
+                accept=".json"
+                className="hidden"
+                onChange={handleImport}
+              />
+              <div className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-3">
+                <Upload className="w-4 h-4 mr-2" />
+                Import
+              </div>
+            </label>
+
+            <Button
+              size="sm"
+              onClick={handleSave}
+              className="bg-blue-600 hover:bg-blue-700 shadow-sm"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Save
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -292,7 +426,7 @@ export default function FunnelEditorPage() {
         <div className="flex-1 relative bg-gray-100">
           <FunnelCanvas
             funnelId={funnelId}
-            initialNodes={nodes}
+            initialNodes={validatedNodes}
             initialEdges={edges}
             onNodesChange={handleNodesChange}
             onEdgesChange={handleEdgesChange}

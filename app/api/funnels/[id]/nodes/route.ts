@@ -42,27 +42,36 @@ export async function PUT(
   try {
     const supabase = getSupabaseClient();
     const { id } = await params;
-    const { node_id, label, position_x, position_y, data } = await request.json();
+    const { nodes } = await request.json();
 
+    if (!nodes || !Array.isArray(nodes)) {
+      return NextResponse.json({ error: 'Nodes array is required' }, { status: 400 });
+    }
+
+    // Format nodes for upsert
+    const formattedNodes = nodes.map((node: any) => ({
+      funnel_id: id,
+      node_id: node.node_id,
+      type: node.type,
+      label: node.label,
+      position_x: node.position_x,
+      position_y: node.position_y,
+      data: node.data || {},
+      updated_at: new Date().toISOString(),
+    }));
+
+    // Upsert nodes
     const { data: result, error } = await supabase
       .from('funnel_nodes')
-      .update({
-        label,
-        position_x,
-        position_y,
-        data,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('funnel_id', id)
-      .eq('node_id', node_id)
+      .upsert(formattedNodes, { onConflict: 'funnel_id,node_id' })
       .select();
 
     if (error) throw error;
 
-    return NextResponse.json(result[0]);
+    return NextResponse.json(result);
   } catch (error) {
-    console.error('Error updating node:', error);
-    return NextResponse.json({ error: 'Failed to update node' }, { status: 500 });
+    console.error('Error updating nodes:', error);
+    return NextResponse.json({ error: 'Failed to update nodes' }, { status: 500 });
   }
 }
 

@@ -26,14 +26,14 @@ export function useFunnelStorage(funnelId: string) {
 
         const { funnel: funnelData, nodes, edges } = await response.json();
 
-        const formattedNodes: Node[] = nodes.map((node) => ({
+        const formattedNodes: Node[] = nodes.map((node: any) => ({
           id: node.node_id,
           data: node.data,
           position: { x: node.position_x, y: node.position_y },
           type: node.type,
         }));
 
-        const formattedEdges: Edge[] = edges.map((edge) => ({
+        const formattedEdges: Edge[] = edges.map((edge: any) => ({
           id: edge.edge_id,
           source: edge.source_node_id,
           target: edge.target_node_id,
@@ -60,19 +60,20 @@ export function useFunnelStorage(funnelId: string) {
   const saveNodes = useCallback(
     async (nodes: Node[]) => {
       try {
-        for (const node of nodes) {
-          await fetch(`/api/funnels/${funnelId}/nodes`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+        await fetch(`/api/funnels/${funnelId}/nodes`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nodes: nodes.map((node) => ({
               node_id: node.id,
+              type: node.type,
               label: node.data.label,
               position_x: node.position.x,
               position_y: node.position.y,
               data: node.data,
-            }),
-          });
-        }
+            })),
+          }),
+        });
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to save nodes');
       }

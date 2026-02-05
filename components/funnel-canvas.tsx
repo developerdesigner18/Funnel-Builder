@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback } from 'react';
+import { toast } from 'sonner';
 import ReactFlow, {
   Node,
   Edge,
@@ -88,6 +89,18 @@ function FunnelCanvasContent({
     [initialEdges, onEdgesChange]
   );
 
+  const isValidConnection = useCallback(
+    (connection: Connection) => {
+      const sourceNode = initialNodes.find((n) => n.id === connection.source);
+      if (sourceNode?.data?.type === 'thank-you') {
+        toast.error('Thank You nodes cannot have outgoing connections');
+        return false;
+      }
+      return true;
+    },
+    [initialNodes]
+  );
+
   const onConnect = useCallback(
     (params: Connection) => {
       // Prevent connecting to self
@@ -161,6 +174,7 @@ function FunnelCanvasContent({
         onNodesChange={handleNodesChange}
         onEdgesChange={handleEdgesChange}
         onConnect={onConnect}
+        isValidConnection={isValidConnection}
         onDragOver={onDragOver}
         onDrop={handleDrop}
         nodeTypes={nodeTypes}
