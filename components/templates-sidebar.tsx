@@ -15,45 +15,54 @@ interface NodeTemplate {
 
 const nodeTemplates: NodeTemplate[] = [
   {
-    id: 'product-1',
+    id: 'sales-page',
     type: 'product',
-    label: 'Product',
+    label: 'Sales Page',
     icon: <Package className="w-5 h-5" />,
-    description: 'Base product offering',
-    defaultData: { productName: 'New Product', price: 99 },
+    description: 'Initial landing page for your offer',
+    defaultData: { productName: 'Sales Page', price: 0, type: 'sales' },
     preview: 'bg-blue-100 text-blue-900',
   },
   {
-    id: 'upsell-1',
+    id: 'order-page',
+    type: 'product',
+    label: 'Order Page',
+    icon: <TrendingUp className="w-5 h-5" />,
+    description: 'Checkout page for customers',
+    defaultData: { productName: 'Checkout', price: 99, type: 'order' },
+    preview: 'bg-green-100 text-green-900',
+  },
+  {
+    id: 'upsell',
     type: 'upsell',
     label: 'Upsell',
     icon: <TrendingUp className="w-5 h-5" />,
-    description: 'Premium upsell option',
-    defaultData: { upsellName: 'Premium Add-on', discount: 15 },
+    description: 'Offer a higher-tier product',
+    defaultData: { upsellName: 'Premium Add-on', discount: 15, type: 'upsell' },
     preview: 'bg-orange-100 text-orange-900',
   },
   {
-    id: 'conditional-1',
-    type: 'conditional',
-    label: 'Conditional',
-    icon: <GitBranch className="w-5 h-5" />,
-    description: 'Split funnel logic',
-    defaultData: { condition: 'Check condition' },
-    preview: 'bg-purple-100 text-purple-900',
+    id: 'downsell',
+    type: 'upsell',
+    label: 'Downsell',
+    icon: <TrendingUp className="w-5 h-5" />,
+    description: 'Lower-priced alternative offer',
+    defaultData: { upsellName: 'Basic Pack', discount: 10, type: 'downsell' },
+    preview: 'bg-yellow-100 text-yellow-900',
   },
   {
-    id: 'end-1',
+    id: 'thank-you',
     type: 'end',
-    label: 'End Node',
+    label: 'Thank You',
     icon: <Flag className="w-5 h-5" />,
-    description: 'Funnel endpoint',
-    defaultData: {},
-    preview: 'bg-gray-100 text-gray-900',
+    description: 'Final page of the funnel',
+    defaultData: { label: 'Thank You Page' },
+    preview: 'bg-purple-100 text-purple-900',
   },
 ];
 
 interface TemplatesSidebarProps {
-  onDragStart: (nodeType: string, defaultData: Record<string, unknown>) => void;
+  onDragStart: (event: React.DragEvent, nodeType: string, label: string, defaultData: Record<string, unknown>) => void;
 }
 
 export function TemplatesSidebar({ onDragStart }: TemplatesSidebarProps) {
@@ -66,7 +75,7 @@ export function TemplatesSidebar({ onDragStart }: TemplatesSidebarProps) {
           <div
             key={template.id}
             draggable
-            onDragStart={() => onDragStart(template.type, template.defaultData)}
+            onDragStart={(e) => onDragStart(e, template.type, template.label, template.defaultData)}
             className="p-3 border border-gray-200 rounded-lg cursor-move hover:bg-gray-50 transition-colors"
           >
             <div className="flex items-center gap-3 mb-2">

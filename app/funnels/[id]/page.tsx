@@ -100,19 +100,54 @@ export default function FunnelEditorPage() {
     [nodes, pushHistory]
   );
 
-  const handleDragStart = (nodeType: string, defaultData: Record<string, unknown>) => {
-    const nodeId = `node-${Date.now()}-${Math.random()}`;
-    const newNode: Node = {
-      id: nodeId,
-      type: nodeType,
+  const handleDragStart = (
+    event: React.DragEvent,
+    nodeType: string,
+    label: string,
+    defaultData: Record<string, unknown>
+  ) => {
+    event.dataTransfer.setData('application/reactflow', nodeType);
+    event.dataTransfer.setData('application/reactflow-label', label);
+    event.dataTransfer.setData(
+      'application/reactflow-data',
+      JSON.stringify(defaultData)
+    );
+    event.dataTransfer.effectAllowed = 'move';
+  };
+
+  const onDrop = (node: Node) => {
+    const nodeType = node.data.type;
+    let finalLabel = node.data.label;
+
+    if (nodeType === 'upsell' || nodeType === 'downsell') {
+      const baseName = nodeType === 'upsell' ? 'Upsell' : 'Downsell';
+
+      // Find all existing nodes of the same type and extract their numbers from labels
+      const existingIndexes = nodes
+        .filter((n) => n.data.type === nodeType)
+        .map((n) => {
+          const match = n.data.label.match(new RegExp(`${baseName} (\\d+)`));
+          return match ? parseInt(match[1], 10) : 0;
+        })
+        .filter((idx) => idx > 0);
+
+      // Find the first available number starting from 1
+      let nextIndex = 1;
+      while (existingIndexes.includes(nextIndex)) {
+        nextIndex++;
+      }
+
+      finalLabel = `${baseName} ${nextIndex}`;
+    }
+
+    const newNode = {
+      ...node,
       data: {
-        label: `New ${nodeType}`,
-        ...defaultData,
+        ...node.data,
+        label: finalLabel,
       },
-      position: { x: 0, y: 0 },
     };
 
-    // Add node immediately
     const updatedNodes = [...nodes, newNode];
     setNodes(updatedNodes);
     handleNodesChange(updatedNodes);
@@ -261,6 +296,7 @@ export default function FunnelEditorPage() {
             initialEdges={edges}
             onNodesChange={handleNodesChange}
             onEdgesChange={handleEdgesChange}
+            onDrop={onDrop}
           />
         </div>
 

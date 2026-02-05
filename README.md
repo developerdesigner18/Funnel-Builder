@@ -50,7 +50,7 @@ cd funnel-builder-ui
 ### 2. Install Dependencies
 
 ```bash
-npm install
+npm install --legacy-peer-deps
 # or
 pnpm install
 ```

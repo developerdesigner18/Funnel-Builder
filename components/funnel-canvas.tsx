@@ -16,6 +16,9 @@ import ReactFlow, {
   NodeTypes,
   applyNodeChanges,
   applyEdgeChanges,
+  useReactFlow,
+  ReactFlowProvider,
+  MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { ProductNode } from './nodes/product-node';
@@ -37,6 +40,7 @@ interface FunnelCanvasProps {
   initialEdges: Edge[];
   onNodesChange: (nodes: Node[]) => void;
   onEdgesChange: (edges: Edge[]) => void;
+  onDrop?: (node: Node) => void;
 }
 
 const GRID_SIZE = 20;
@@ -45,14 +49,15 @@ const snapToGrid = (value: number) => {
   return Math.round(value / GRID_SIZE) * GRID_SIZE;
 };
 
-export function FunnelCanvas({
+function FunnelCanvasContent({
   funnelId,
   initialNodes,
   initialEdges,
   onNodesChange,
   onEdgesChange,
+  onDrop,
 }: FunnelCanvasProps) {
-  // Removed internal state to prevent infinite loops and make it a true controlled component
+  const reactFlowInstance = useReactFlow();
 
   const handleNodesChange: OnNodesChange = useCallback(
     (changes: NodeChange[]) => {
@@ -84,11 +89,68 @@ export function FunnelCanvas({
   );
 
   const onConnect = useCallback(
-    (connection: Connection) => {
-      const nextEdges = addEdge(connection, initialEdges);
+    (params: Connection) => {
+      // Prevent connecting to self
+      if (params.source === params.target) return;
+
+      // Prevent duplicate edges
+      const isDuplicate = initialEdges.some(
+        (edge) => edge.source === params.source && edge.target === params.target
+      );
+      if (isDuplicate) return;
+
+      const edge = {
+        ...params,
+        type: 'smoothstep',
+        animated: true,
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: '#3b82f6',
+        },
+        style: { stroke: '#3b82f6', strokeWidth: 2 },
+      };
+
+      const nextEdges = addEdge(edge, initialEdges);
       onEdgesChange(nextEdges);
     },
     [initialEdges, onEdgesChange]
+  );
+
+  const onDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  const handleDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault();
+
+      const type = event.dataTransfer.getData('application/reactflow');
+      const label = event.dataTransfer.getData('application/reactflow-label');
+      const dataStr = event.dataTransfer.getData('application/reactflow-data');
+
+      if (!type || !onDrop) return;
+
+      const position = reactFlowInstance.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+
+      const defaultData = dataStr ? JSON.parse(dataStr) : {};
+
+      const newNode: Node = {
+        id: `node-${Date.now()}-${Math.random()}`,
+        type,
+        position,
+        data: {
+          label: label || `New ${type}`,
+          ...defaultData,
+        },
+      };
+
+      onDrop(newNode);
+    },
+    [reactFlowInstance, onDrop]
   );
 
   return (
@@ -99,6 +161,8 @@ export function FunnelCanvas({
         onNodesChange={handleNodesChange}
         onEdgesChange={handleEdgesChange}
         onConnect={onConnect}
+        onDragOver={onDragOver}
+        onDrop={handleDrop}
         nodeTypes={nodeTypes}
         fitView
       >
@@ -108,5 +172,13 @@ export function FunnelCanvas({
       </ReactFlow>
       {initialNodes.length === 0 && <EmptyFunnelState />}
     </div>
+  );
+}
+
+export function FunnelCanvas(props: FunnelCanvasProps) {
+  return (
+    <ReactFlowProvider>
+      <FunnelCanvasContent {...props} />
+    </ReactFlowProvider>
   );
 }
