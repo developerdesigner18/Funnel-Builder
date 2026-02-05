@@ -40,14 +40,40 @@ The editor is built with a focus on inclusion and speed:
 
 ## 🛠️ Tech Stack
 
-- **Framework**: [Next.js 16 (App Router)](https://nextjs.org/)
+- **Framework**: [Next.js 15 (App Router)](https://nextjs.org/)
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **UI Components**: [Shadcn UI](https://ui.shadcn.com/) (based on Radix UI)
-- **Diagramming**: [React Flow](https://reactflow.dev/)
+- **Diagramming**: [React Flow 11](https://reactflow.dev/)
 - **Icons**: [Lucide React](https://lucide.dev/)
-- **Forms & Validation**: [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/)
-- **Database**: [Supabase](https://supabase.com/) (PostgreSQL)
+- **Storage & Auth**: [Supabase](https://supabase.com/) (PostgreSQL + RLS)
+
+## 🏗️ Architectural Decisions
+
+### 1. Why Supabase?
+Supabase was chosen as the backend-as-a-service (BaaS) for several key reasons:
+- **Instant Persistence**: Its real-time capabilities allow for seamless auto-saving (implemented via debounced hooks).
+- **Relational Integrity**: Managing nodes and edges requires a relational structure (PostgreSQL) to ensure that deleting a funnel correctly cascades to its associated nodes and edges.
+- **Row Level Security (RLS)**: Provides a production-ready security layer out of the box, allowing us to define fine-grained access policies directly in SQL.
+
+### 2. State Management Strategy
+The application uses a **hybrid state management** approach:
+- **React Flow Internal State**: Handles high-frequency visual updates (dragging, zooming) for maximum performance.
+- **Custom React Hooks (`useUndoRedo`, `useFunnelStorage`)**: Manage the "source of truth" and persistent history. By decoupling high-frequency dragging from the history stack, we avoid performance bottlenecks and ensure that only meaningful changes (interaction-end) are recorded in the undo/redo stack.
+
+### 3. "Soft" Validation vs. "Hard" Constraints
+We implemented a "Soft Validation" system. Instead of blocking the user from creating "broken" funnels (which can be frustrating during the creative phase), we provide real-time visual warnings (orange borders, tooltips) on invalid nodes. This balance preserves user flow while ensuring the final output is logical.
+
+## ⚖️ Tradeoffs & Considerations
+
+### What was prioritized:
+- **Performance**: Heavy use of `React.memo` and decoupled history updates to ensure zero lag even with 50+ nodes.
+- **Developer Experience**: A robust SQL setup script and clear directory structure for easy extension.
+- **Accessibility**: Reaching WCAG standards for keyboard and screen-reader users was a non-negotiable requirement.
+
+### What was skipped (and why):
+- **Complex Edge Logic (e.g., Cyclical detection)**: While we prevent self-connections, we allowed generalized loops. In advanced marketing funnels, users sometimes create circular re-engagement paths.
+- **Collaborative Editing (CRDTs)**: While Supabase supports real-time, we focused on a robust single-editor experience first to ensure state stability before introducing multi-user conflict resolution.
 
 ## 📦 Prerequisites
 
@@ -86,15 +112,14 @@ DATABASE_URL=your_postgresql_connection_string
 
 ### 4. Database Setup
 
-You need to initialize the database tables. You can do this by running the provided SQL script in your Supabase SQL Editor.
+You need to initialize the database tables and security policies. You can do this by running the provided SQL script in your Supabase SQL Editor.
 
 The script is located at: `scripts/setup-funnels.sql`
 
-Alternatively, if you have the Supabase CLI configured strings, you can run the migration script:
-
-```bash
-npm run migrate
-```
+This script will:
+1. Create the `funnels`, `funnel_nodes`, and `funnel_edges` tables.
+2. Enable **Row Level Security (RLS)**.
+3. Establish public access policies (to be customized for production auth).
 
 ### 5. Run the Application
 
@@ -108,28 +133,16 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ```
 funnel-builder-ui/
-├── app/                    # Next.js App Router pages and API routes
-│   ├── api/                # Backend API endpoints (funnels, nodes, edges)
-│   ├── funnels/            # Funnel management and editor pages
-│   └── page.tsx            # Landing page
-├── components/             # React components
-│   ├── nodes/              # Custom React Flow nodes (Upsell, Product, etc.)
-│   ├── ui/                 # Reusable UI components (Shadcn)
-│   ├── funnel-canvas.tsx   # Main editor canvas
-│   └── properties-editor.tsx # Node configuration sidebar
-├── hooks/                  # Custom React hooks
-├── lib/                    # Utilities and clients (Supabase)
-├── public/                 # Static assets
-├── scripts/                # Database setup and migration scripts
-└── styles/                 # Global styles
+├── app/                    # Next.js App Router (Pages & API)
+├── components/             # UI Components
+│   ├── nodes/              # Custom React Flow Node Definitions
+│   ├── funnel-canvas.tsx   # Core Editor Interface
+│   └── properties-editor.tsx # Configuration Sidebar
+├── hooks/                  # Logic for Persistence, Undo/Redo, and Validation
+├── lib/                    # Supabase Client & Utilities
+├── scripts/                # Database Migrations & SQL Setup
+└── styles/                 # Tailwind Config & Global CSS
 ```
-
-## 🗄️ Database Schema
-
-The project uses a relational schema to store funnel data:
-- **funnels**: Stores metadata about each funnel (name, description).
-- **funnel_nodes**: Stores individual nodes (type, position, data) linked to a funnel.
-- **funnel_edges**: Stores connections between nodes.
 
 ## 🤝 Contributing
 
