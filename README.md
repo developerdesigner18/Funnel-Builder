@@ -144,6 +144,17 @@ funnel-builder-ui/
 └── styles/                 # Tailwind Config & Global CSS
 ```
 
+## 🚀 Future Roadmap & Improvements
+
+To take this from a powerful editor to a market-leading funnel platform, the following features would be the next priority:
+
+1.  **Real-time Collaboration**: Implement CRDTs (Conflict-free Replicated Data Types) or Supabase Realtime to allow multiple team members to design funnels simultaneously with presence indicators.
+2.  **Versioned Funnels**: Add a snapshot system to save major versions of a funnel, allowing users to A/B test different architectures and roll back to previous successful deployments.
+3.  **Role-Based Access Control (RBAC)**: Enhance RLS policies with user roles (Editor, Viewer, Admin) to ensure enterprise-grade security within marketing teams.
+4.  **Advanced Validation Engine**: Implement cross-node data flow validation (e.g., ensuring a "Discount" node actually has a "Product" parent) and cyclical path detection for complex logic.
+5.  **Analytics Overlays**: Integrate live tracking data directly onto the canvas, showing conversion rates and drop-off percentages as heatmaps over the node connections.
+6.  **AI-Generated Blueprints**: Allow users to prompt for a "High Ticket Sales Funnel" and have the editor automatically wire up a proven architecture.
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
