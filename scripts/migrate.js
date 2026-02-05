@@ -7,7 +7,7 @@ const dotenv = require('dotenv');
 dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
 
 async function migrate() {
-    const dbUrl = "postgresql://postgres:qujpSKt0rxU8ZmRQ@db.mzlmnnvbfwnykdcsvjjw.supabase.co:5432/postgres";
+    const dbUrl = process.env.DATABASE_URL;
 
     if (!dbUrl) {
         console.error('❌ Error: DATABASE_URL is missing in .env.local');
