@@ -4,6 +4,16 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, Edit3, Calendar } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Funnel {
   id: string;
@@ -18,6 +28,7 @@ export default function FunnelsPage() {
   const [error, setError] = useState<string | null>(null);
   const [newFunnelName, setNewFunnelName] = useState('');
   const [creating, setCreating] = useState(false);
+  const [funnelToDelete, setFunnelToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     fetchFunnels();
@@ -64,12 +75,11 @@ export default function FunnelsPage() {
   };
 
   const handleDeleteFunnel = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this funnel?')) return;
-
     try {
       const response = await fetch(`/api/funnels/${id}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('Failed to delete funnel');
       setFunnels(funnels.filter((f) => f.id !== id));
+      setFunnelToDelete(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete funnel');
     }
@@ -171,7 +181,7 @@ export default function FunnelsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleDeleteFunnel(funnel.id)}
+                    onClick={() => setFunnelToDelete(funnel.id)}
                     className="text-red-600 hover:text-red-700 hover:bg-red-50"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -182,6 +192,28 @@ export default function FunnelsPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <AlertDialog open={!!funnelToDelete} onOpenChange={(open) => !open && setFunnelToDelete(null)}>
+        <AlertDialogContent className="bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your
+              funnel and all its associated nodes and connections.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-gray-300">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => funnelToDelete && handleDeleteFunnel(funnelToDelete)}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete Funnel
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
